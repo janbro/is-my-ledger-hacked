@@ -52,6 +52,7 @@ function nanoSRig(p){
 
 // Shared helpers for the built models (Nano X, Flex, Stax).
 // Gives every part a pick id (1, 2, 3...). The "cover*" pieces share one id, like the Nano S.
-function makePartIds(parts){const ids={};let n=1;for(const p of parts){const k=p.startsWith('cover')?'cover':p;if(!ids[k])ids[k]=n++;}return ids;}
+// The "implant*" pieces share one id too (an implant can have pieces on several parts).
+function makePartIds(parts){const ids={};let n=1;for(const p of parts){const k=p.startsWith('cover')?'cover':p.startsWith('implant')?'implant':p;if(!ids[k])ids[k]=n++;}return ids;}
 // Step i of the animation (0-based), eased: 0 before the step, 1 after it.
 const rigStep=(p,i)=>smooth(clamp(p-i,0,1));

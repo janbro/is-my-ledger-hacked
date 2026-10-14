@@ -118,6 +118,14 @@
 .simple-controls button.primary{background:var(--accent);border-color:var(--accent);color:#1d1712}
 .simple-controls button[aria-pressed="true"]{border-color:var(--accent);background:#3a2b22}
 .simple-controls .note{font-size:11px;color:var(--muted);margin-left:auto}
+/* Holds the note and the icon. It fills the space right of the buttons, so a long note wraps beside them. */
+.simple-controls .note-row{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:1 1 260px;margin-left:auto}
+/* The "i" icon after the device note. Its tooltip opens upward and to the left, so it stays inside the page at the bottom-right corner. */
+.sim-info{position:relative;flex-shrink:0;width:18px;height:18px;border-radius:50%;border:1px solid var(--muted);color:var(--muted);font:italic 700 11px/16px Georgia,serif;text-align:center;cursor:help}
+/* :focus (not :focus-visible) so a tap on a phone also opens the tooltip. */
+.sim-info:hover,.sim-info:focus{outline:0;color:var(--accent);border-color:var(--accent)}
+.sim-info::after{content:attr(data-tip);position:absolute;right:-6px;bottom:calc(100% + 10px);width:260px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:#0c1014;color:var(--text);font:400 12px/1.45 var(--sans);text-align:left;box-shadow:0 8px 24px #0009;opacity:0;visibility:hidden;transition:opacity .15s;z-index:5;pointer-events:none}
+.sim-info:hover::after,.sim-info:focus::after{opacity:1;visibility:visible}
 /* Device tabs above the 3D viewer. The selected tab uses the accent colour. */
 .device-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .device-tabs button{padding:9px 16px;border-radius:999px;border:1px solid #3a434c;background:#1d242a;font-size:13px;font-weight:600;color:var(--muted)}
@@ -196,7 +204,12 @@
   <div class="simple-controls">
    <button id="play" class="primary">Take it apart</button>
    <button id="toggle-implant" aria-pressed="false">Show an implant</button>
+   <!-- The note and its info icon share one wrapper, so the icon stays next to the text when the text wraps. -->
+   <span class="note-row">
    <span class="note" id="model-note">Ledger Nano S, 3D reconstruction.</span>
+   <!-- Info icon: hover (or tab to it) to see that the 3D model is a simulation. The text lives in data-tip. -->
+   <span class="sim-info" tabindex="0" role="img" aria-label="This model is a simulation, so it is not 1:1 accurate to the exact device specifications. Watch the teardowns below to see the genuine device pieces and circuit board layout." data-tip="This model is a simulation, so it is not 1:1 accurate to the exact device specifications. Watch the teardowns below to see the genuine device pieces and circuit board layout.">i</span>
+   </span>
   </div>
  </div>
 </section>
@@ -565,7 +578,10 @@ class CircuitRenderer {
       gl.enableVertexAttribArray(2);gl.vertexAttribPointer(2,2,gl.FLOAT,false,32,entry.offset+24);
       const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];
       for(let i=entry.offset/4;i<entry.offset/4+entry.count*8;i+=8)for(let j=0;j<3;j++){min[j]=Math.min(min[j],arr[i+j]);max[j]=Math.max(max[j],arr[i+j]);}
-      this.meshes.push({...entry,vao,min,max,semantic:entry.part.startsWith('cover')?'cover':entry.part});
+      // Pieces of one thing share a "semantic" name: coverTop/coverBottom are "cover".
+      // Implant pieces can ride on other parts (for example "implantCover" on the back cover). They are all "implant".
+      const semantic=entry.part.startsWith('cover')?'cover':entry.part.startsWith('implant')?'implant':entry.part;
+      this.meshes.push({...entry,vao,min,max,semantic});
     }
     gl.bindVertexArray(null);
   }
@@ -642,8 +658,9 @@ class CircuitRenderer {
     this.needsFit=true;this.shadowDirty=true;this.onresize?.();
   }
   setProgress(p,instant=false){this.targetProgress=clamp(p,0,6);this.playing=false;if(instant)this.progress=this.targetProgress;this.shadowDirty=true;this.onchange();}
-  // Implant mode also opens the device far enough to show the implant (model.implantProgress, default 5).
-  setMode(mode){if(!['oem','implant','software'].includes(mode))return;this.mode=mode;const at=this.model.implantProgress??5;if(mode==='implant'&&this.targetProgress<at)this.setProgress(at);if(mode!=='implant'&&this.selected==='implant')this.select('pcb');this.shadowDirty=true;this.needsFit=true;this.onchange();}
+  // Implant mode also opens the device to the step that shows the implant best (model.implantProgress, default 5).
+  // It goes to exactly that step: on the Nano X the last step turns the board over and hides the implant.
+  setMode(mode){if(!['oem','implant','software'].includes(mode))return;this.mode=mode;const at=this.model.implantProgress??5;if(mode==='implant'&&this.targetProgress!==at)this.setProgress(at);if(mode!=='implant'&&this.selected==='implant')this.select('pcb');this.shadowDirty=true;this.needsFit=true;this.onchange();}
   select(name){if(!this.model.partIds[name])return;this.selected=name;this.onselect(name);}
   isolate(name){this.isolated=this.isolated===name?null:name;this.autoFit=true;this.needsFit=true;this.shadowDirty=true;this.onchange();}
   focus(){this.autoFit=false;const bounds=this.bounds(this.selected);this.fitBounds(bounds,1.7);this.onchange();}
@@ -653,7 +670,7 @@ class CircuitRenderer {
   // The Nano S animation moved to models/device-nano-s.js.
   updateTransforms(){this.transforms=this.model.rig(this.progress);}
   isVisible(m){
-    if(m.part==='implant'&&this.mode!=='implant')return false;
+    if(m.semantic==='implant'&&this.mode!=='implant')return false; // every implant piece hides outside implant mode
     if(this.isolated){if(this.isolated==='pcb')return this.model.pcbParts.includes(m.part);if(this.isolated==='display')return ['display','ribbon'].includes(m.part);return m.semantic===this.isolated;}
     return true;
   }
@@ -936,6 +953,8 @@ const MATERIALS={
  nickel:mat(0xbdbab4,.22,1),solder:mat(0xc8ccd0,.20,1),chip:mat(0x202225,.55,0,2),darkMetal:mat(0x5a6266,.36,1),
  switchYellow:mat(0xdfb31a,.35,0),gold:mat(0xe8c47a,.24,1),ivory:mat(0xdad7c8,.48,0),ceramic:mat(0xb5a281,.60,0),
  implantBoard:mat(0x2c6b4e,.43,.08,3),wireRed:mat(0xae4134,.48,.12),wireBlack:mat(0x2c2c2e,.44),wireGold:mat(0xd1b461,.37,.22),
+ // Glossy black paint. The Nano X implant is sprayed with it so it blends in with the board (models/implants.js).
+ coatBlack:mat(0x0c0d0f,.2,0,2),
  // Added for the Nano X, Flex and Stax models (models/device-*.js). Colours picked from Ledger's photos.
  // Cases and frames:
  gloss:mat(0x0b0c0e,.09,0,0),backPlastic:mat(0x3b3c3f,.68,0,2),spineStrip:mat(0x9aa1a6,.28,0,0),rubber:mat(0x1a1b1d,.85,0,2),
@@ -959,6 +978,7 @@ const MATERIALS={
 <script src="models/atlas.js"></script>
 <script src="models/electronics.js"></script>
 <script src="models/board-fill.js"></script>
+<script src="models/implants.js"></script>
 <script src="models/device-nano-s.js"></script>
 <script src="models/device-nano-x.js"></script>
 <script src="models/flex-board.js"></script>
@@ -1006,7 +1026,8 @@ function syncControls(){
   const implant=viewer.mode==='implant',device=DEVICE_MODELS[currentDevice];
   $('#toggle-implant').setAttribute('aria-pressed',String(implant));
   $('#toggle-implant').textContent=implant?'Hide the implant':'Show an implant';
-  // Honesty note: the 3D implant is made up for illustration. The photos in the game are real.
+  // Honesty note: the Nano X, Flex and Stax implants follow MagicalTux's real photos, but their exact fit is
+  // approximate. The Nano S implant is made up (there is no photo of one). The photos in the game are real.
   // Each device has its own note (see models/device-*.js).
   $('#model-note').textContent=implant?device.implantNote:device.note;
 }
@@ -1094,7 +1115,7 @@ const QUIZ_PHOTOS=[
  {kind:'photo',src:'compromised/HUfsevTaMAAEd1l.jpg',compromised:true,device:'flex',x:.60,y:.43,
   alt:'An opened Ledger Flex. The back cover is lifted away, with a thin black wire running from inside the device to it.',
   tag:'Antenna wire to the back cover',
-  reason:'Look at the back cover in the right hand. It has a printed part number, "AC-X2201-FLEX", with Chinese text meaning "Eurasia version". A thin black antenna wire runs from inside the device to a small connector on it. Ledger\'s genuine Flex back cover is plain inside, with no wire. An extra antenna means an extra radio was added.',
+  reason:'Look at the back cover in the right hand. It has a printed part number, "AC-A2201-FLEX", with Chinese text meaning "Eurasia version". A thin black antenna wire runs from inside the device to a small connector on it. Ledger\'s genuine Flex back cover is plain inside, with no wire. An extra antenna means an extra radio was added.',
   credit:['Photo posted by Mark Karpelès (@MagicalTux) on X',KARPELES_PROFILE]},
  {kind:'photo',src:'compromised/HUMqvANa4AA2uaA.jpg',compromised:true,device:'nano-x',x:.38,y:.72,
   alt:'A pink Ledger Nano X taken apart: steel guard, clear front cover, and the board with its screen inside the pink case.',

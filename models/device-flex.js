@@ -16,7 +16,7 @@
 DEVICE_MODELS.flex={
   label:'Flex',name:'Ledger Flex',
   note:"Ledger Flex, rebuilt from Ledger's photos.",
-  implantNote:'Illustration: an added radio board wired to the debug pads, hidden under the shield. Not a real Flex implant.',
+  implantNote:"Modelled on MagicalTux's photo of a real implanted Flex: an extra antenna inside the back cover, with a thin cable into the device. The photo does not show the module it feeds. Its place here is a best guess.",
   create(){
     const k=new MeshKit(),A=new Atlas(),PI=Math.PI;
     const W=56.5,H=78.4,CHIN=-26.5; // the chin covers everything below y = -26.5
@@ -133,19 +133,11 @@ DEVICE_MODELS.flex={
     });
     // ---------- Circuit board (flex-board.js), turned and moved to the top ----------
     k.inPart('pcb',()=>k.place(FLEX_BOARD.at,()=>buildFlexBoard(k,T)));
-    // ---------- Implant (only in implant mode): a tiny radio board tapping the debug pads ----------
-    // It sits on the back of the board, under the steel shield. Same local coordinates as the back side.
-    k.inPart('implant',()=>k.place(FLEX_BOARD.at,()=>k.place({at:[0,0,FLEX_BOARD.BOT],ry:PI},()=>{
-      k.roundBox('rubber',[-4.3,-8.2,.06],[6,4.6,.12],.1,1);
-      k.roundBox('implantBoard',[-4.3,-8.2,.4],[6,4.6,.55],.08,1);
-      k.place({at:[-4.3,-8.2,.67]},()=>{k.roundBox('nickel',[-1,0,.22],[2.8,2.8,.44],.06,1);k.passive(1.9,1.2,'0402');k.passive(1.9,-1.2,'0402');k.crystal(1.7,0,{w:1.2,d:.9,h:.4});});
-      // Copper wire antenna, zig-zagging across the free space.
-      k.tube('copper',[[-7.3,-6.4,.6],[-7.6,-4.6,.25],[-3.4,-4.6,.25],[-3.4,-5.4,.25],[-8.6,-5.4,.25]],.07);
-      // Wires to the debug pads: power (3V0), ground and the two data lines (CLK, IO).
-      const wire=(mat,a,b)=>k.tube(mat,[a,[(a[0]+b[0])/2,(a[1]+b[1])/2,1.0],[b[0],b[1],.12]],.12);
-      wire('wireRed',[-1.6,-10,.6],[6.82,-20.7]);wire('wireBlack',[-2.4,-10.4,.6],[.59,-24.75]);
-      wire('wireGold',[-3.4,-10.4,.6],[4.86,-21.47]);wire('wireGold',[-4.4,-10.4,.6],[5.16,-22.5]);
-    })));
+    // ---------- Implant (only in implant mode), from MagicalTux's photo (see models/implants.js) ----------
+    // An antenna sheet inside the back cover, and its cable to a module hidden in the foam pad's space.
+    // The old made-up radio board on the debug pads was replaced by this real design.
+    k.inPart('implantCover',()=>buildFlexImplantCover(k,A));
+    k.inPart('implantFrame',()=>buildFlexImplantModule(k));
 
     // E Ink lock screen, 480 x 600. Black ink on light grey "paper".
     const screen=document.createElement('canvas');screen.width=480;screen.height=600;
@@ -155,10 +147,10 @@ DEVICE_MODELS.flex={
     c.textAlign='center';c.font='600 40px Arial, sans-serif';c.fillText('Ledger Flex',240,420);
     c.font='22px Arial, sans-serif';c.fillText('3D REFERENCE',240,462);c.font='20px Arial, sans-serif';c.fillText('Tap to unlock',240,560);
 
-    const parts=['front','frame','chin','back','nfc','battery','shield','pcb','implant'];
+    const parts=['front','frame','chin','back','nfc','battery','shield','pcb','implantCover','implantFrame'];
     return {name:this.name,...k.build(),atlas:A.canvas,screen:{canvas:screen,px:[480,600],kind:'eink'},
       partIds:makePartIds(parts),pcbParts:['pcb'],center:[5,18,0],startProgress:0,implantProgress:6,
-      // Steps: 1 the device turns over (back up), 2 the plastic back cover comes off,
+      // Steps: 1 the device turns over (back up), 2 the plastic back cover opens like a book,
       // 3 the chin slides straight down, 4 the NFC film, then the battery, then the shield,
       // 6 the circuit board. Parts are laid out on the table.
       rig(p){
@@ -167,11 +159,17 @@ DEVICE_MODELS.flex={
         // Moves a part by (dx,dy) and lowers it onto the table. zTop = its highest point before the flip.
         // The flip mirrors x, so a part ends up at (-its x + dx, its y + dy).
         const lay=(v,dx,dy,zTop)=>Mat.mul(Mat.translation(dx*v,dy*v,(-3.85+zTop)*v+14*Math.sin(PI*v)),F);
-        t.front=t.frame=F;
-        t.back=lay(s(1),60,0,-3.3);
+        // The back cover swings open over the power button edge (a hinge line at x = -30, z = 3.85 after
+        // the flip), like a book page, so its inside faces up. Then it drops 7.7 mm onto the table.
+        // That is how MagicalTux opened it in his photo: the antenna cable runs over that edge.
+        const book=v=>Mat.mul(Mat.translation(-30,0,3.85-7.7*v),Mat.mul(Mat.rotY(-PI*v),Mat.mul(Mat.translation(30,0,-3.85),F)));
+        t.front=t.frame=t.implantFrame=F;
+        t.back=t.implantCover=book(s(1));
         t.chin=Mat.mul(Mat.translation(0,-22*s(2),0),F); // slides straight off the bottom, no lifting
-        t.nfc=lay(s(3),-52,0,-3.19);t.battery=lay(s(3.6),-54,58,.7);
-        t.shield=lay(s(4.2),3,62,-2.37);t.pcb=lay(s(5),57,64,.78);t.implant=t.pcb;
+        // The NFC film moved to the other side (the open cover lies where it was). The battery moved up a little,
+        // so it does not touch the open cover.
+        t.nfc=lay(s(3),58,0,-3.19);t.battery=lay(s(3.6),-54,70,.7);
+        t.shield=lay(s(4.2),3,62,-2.37);t.pcb=lay(s(5),57,64,.78);
         return t;
       }};
   }

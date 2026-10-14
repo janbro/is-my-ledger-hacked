@@ -12,7 +12,7 @@
 DEVICE_MODELS.nanoX={
   label:'Nano X',name:'Ledger Nano X',
   note:"Ledger Nano X, rebuilt from Ledger's photos.",
-  implantNote:'Illustration: an added board with hand-soldered wires, like the fake Nano X in the game.',
+  implantNote:"Modelled on MagicalTux's photos of a real implanted Nano X: a flex board painted black, with an LTE modem can and a chip with its markings sanded off. It is soldered onto the test pads under the screen. The fit is approximate.",
   create(){
     const k=new MeshKit(),A=new Atlas(),PI=Math.PI;
     const PIVOT=23.3,BTN_USB=-26.1,FOLD=-38.65,BODY=Outline.rectFn(69,17.8,3,6,-3,0);
@@ -141,17 +141,10 @@ DEVICE_MODELS.nanoX={
       k.sot23(-20.6,3,{leads:6});k.passive(-20.2,-1,'0402');k.passive(-20.2,-3,'0402');
       for(const y of [4.5,-5.5])k.cyl('gold',[-19.6,y,1.4],.9,.06,20);
     }));
-    // ---------- Implant (only in implant mode): an added board with hand-soldered wires ----------
-    // It sits on the chip side, piggyback on top of the chips, because that side faces up at the end.
-    // Same local coordinates as the chip side above (rx = 180 degrees).
-    k.inPart('implant',()=>k.place({at:[0,0,BOT],rx:PI},()=>{
-      k.roundBox('implantBoard',[-12,1,1.25],[9,6,.6],.08,1);
-      k.place({at:[-12,1,1.55]},()=>{k.qfn(0,0,{w:3,d:3,pins:6});k.passive(2.8,1.6,'0402');k.passive(2.8,-1.6,'0402');k.passive(-3,1.8,'0603');k.crystal(-3,-1.5,{w:1.6,d:1.2});});
-      // Red and black: power, stolen from the USB socket legs. Copper: tapped onto the data lines near the inductor.
-      k.tube('wireRed',[[-16.4,2.6,1.6],[-20,3.6,2.4],[-26,4.3,2.4],[-31.5,4,.3]],.17);
-      k.tube('wireBlack',[[-16.4,-.6,1.6],[-21,-2.6,2.3],[-27,-4.3,2.3],[-31.5,-4,.3]],.17);
-      k.tube('wireGold',[[-7.6,1.6,1.6],[-2,4.3,2.4],[8,4,2.4],[15.3,1.3,.25]],.13);
-    }));
+    // ---------- Implant (only in implant mode): the black-painted LTE flex from MagicalTux's photos ----------
+    // It hides in the space under the screen, on the board's top face (see models/implants.js).
+    // The old made-up green board with red and black wires was replaced by this real design.
+    k.inPart('implant',()=>k.place({at:[0,0,TOP]},()=>buildNanoXImplant(k,A)));
 
     // OLED image: 128 x 64 white pixels on black, like the real dashboard.
     const screen=document.createElement('canvas');screen.width=128;screen.height=64;
@@ -161,7 +154,8 @@ DEVICE_MODELS.nanoX={
 
     const parts=['coverTop','coverBottom','coverSpine','front','buttons','display','ribbon','pcb','battery','rear','implant'];
     return {name:this.name,...k.build(),atlas:A.canvas,screen:{canvas:screen,px:[128,64],kind:'oled'},
-      partIds:makePartIds(parts),pcbParts:['pcb'],center:[15,0,0],startProgress:1,implantProgress:6,
+      // implantProgress 5: the screen is off and the board's top face (with the implant) still faces up.
+      partIds:makePartIds(parts),pcbParts:['pcb'],center:[15,0,0],startProgress:1,implantProgress:5,
       // Steps: 1 swivel swings open, 2 swivel slides off, 3 rear shell drops and the battery slides out,
       // 4 front frame lifts (buttons follow), 5 OLED lifts off its socket, 6 the board turns over.
       rig(p){

@@ -12,7 +12,7 @@
 DEVICE_MODELS.stax={
   label:'Stax',name:'Ledger Stax',
   note:"Ledger Stax, rebuilt from Ledger's photos.",
-  implantNote:'Illustration: an added cellular modem with its own antenna, fed from the USB socket. Not a real Stax implant.',
+  implantNote:"Modelled on MagicalTux's photos of a real implanted Stax: a second board with a chip and a modem can on the board's screen side, a black flex tapping the battery, and an antenna patch inside the back cover. The fit is approximate.",
   create(){
     const k=new MeshKit(),A=new Atlas(),PI=Math.PI;
     // The screen image is one strip, unrolled: back strip (1.4 mm), spine (half circle), front (49.6 mm).
@@ -29,7 +29,7 @@ DEVICE_MODELS.stax={
       mcu:A.text(['ST','32WB55','PHL 342'],{w:400,h:302}),
       backText:A.text(['LEDGER STAX - 2024','SN: 0UF442F007','Model: 2103 - Made in Vietnam'],{w:708,h:176,align:'left',weight:500}),
       marks:A.marks({w:480,h:150,ukca:true}),qrYellow:A.qrLabel(52,{w:200,h:212,text:'STX-24'}),
-      cell:A.text(['+ 1ICP4/39/45','LP453945PPI  3.8V','200mAh  0.76Wh'],{w:640,h:240,weight:600}),gsm:t(['GSM','4G'],200,160)
+      cell:A.text(['+ 1ICP4/39/45','LP453945PPI  3.8V','200mAh  0.76Wh'],{w:640,h:240,weight:600})
     };
 
     // ---------- Frame (part frame, stays): aluminium band, spine end caps, side button, chassis ----------
@@ -97,17 +97,11 @@ DEVICE_MODELS.stax={
     });
     // ---------- Circuit board (stax-board.js) ----------
     k.inPart('pcb',()=>buildStaxBoard(k,T));
-    // ---------- Implant (only in implant mode): a cellular modem below the shield frame ----------
-    // Same local coordinates as the board's back side (x mirrored).
-    k.inPart('implant',()=>k.place({at:[0,0,STAX_BOARD.BOT],ry:PI},()=>{
-      k.roundBox('rubber',[5,-30.5,.05],[8.5,6.5,.1],.1,1);k.roundBox('implantBoard',[5,-30.5,.35],[8.5,6.5,.5],.08,1);
-      k.place({at:[4.4,-30.5,.6]},()=>{k.roundBox('nickel',[0,0,.4],[6.2,5,.8],.15,2);k.label('chipLabel',0,0,.805,3.4,2.7,T.gsm);});
-      k.place({at:[8.4,-30.5,.6]},()=>{k.passive(0,1.8,'0402',{rz:PI/2});k.passive(0,-1.8,'0402',{rz:PI/2});});
-      // Its own antenna: a copper wire zig-zag along the bottom edge.
-      k.tube('copper',[[9.2,-33.2,.6],[10.5,-36,.2],[16.5,-36,.2],[16.5,-37.4,.2],[10.5,-37.4,.2],[10.5,-38.8,.2],[16.5,-38.8,.2],[16.5,-40.2,.2]],.08);
-      // Power, stolen from the USB socket legs.
-      k.tube('wireRed',[[1.4,-33.6,.6],[.6,-35.6,.9],[-.25,-36.9,.2]],.13);k.tube('wireBlack',[[2.4,-33.6,.6],[1.5,-38,.9],[-.25,-41,.2]],.13);
-    }));
+    // ---------- Implant (only in implant mode), from MagicalTux's photos (see models/implants.js) ----------
+    // A second board on the screen side of the circuit board, and an antenna patch inside the back cover.
+    // The old made-up modem on the back side was replaced by this real design.
+    k.inPart('implant',()=>k.place({at:[0,0,STAX_BOARD.TOP]},()=>buildStaxImplant(k)));
+    k.inPart('implantCover',()=>buildStaxImplantCover(k,A));
 
     // E Ink screen image (512 x 695): back strip, spine with the device name, front with Ledger's onboarding text.
     const screen=document.createElement('canvas');screen.width=512;screen.height=695;
@@ -118,19 +112,28 @@ DEVICE_MODELS.stax={
     c.fillStyle='#141517';['To own and manage','these assets, you need','the private keys linked','to them.'].forEach((l,i)=>c.fillText(l,front+28,350+i*36));
     c.fillStyle='#6a6b6e';c.font='22px Arial, sans-serif';c.textAlign='center';c.fillText('Tap to continue',(front+512)/2,660);
 
-    const parts=['display','frame','back','coil','battery','bracket','pcb','implant'];
+    const parts=['display','frame','back','coil','battery','bracket','pcb','implant','implantCover'];
     return {name:this.name,...k.build(),atlas:A.canvas,screen:{canvas:screen,px:[512,695],kind:'eink'},
       partIds:makePartIds(parts),pcbParts:['pcb'],center:[4,25,0],startProgress:0,implantProgress:6,
-      // Steps: 1 the device turns over (back up), 2 the back cover comes off, 3 the charging coil,
-      // 4 the battery, 5 the bracket, 6 the circuit board. Parts are laid out on the table.
+      // Steps: 1 the device turns over (back up), 2 the back cover opens like a book, 3 the charging coil,
+      // 4 the battery, 5 the bracket, 6 the circuit board lifts out (it stays back side up). Parts are laid out on the table.
       rig(p){
         const t={},s=i=>rigStep(p,i),f=s(0);
         const F=Mat.mul(Mat.translation(0,0,8*Math.sin(PI*f)),Mat.rotY(PI*f));
         // Moves a part by (dx,dy) and lowers it onto the table. zTop = its highest point before the flip.
         const lay=(v,dx,dy,zTop)=>Mat.mul(Mat.translation(dx*v,dy*v,(-3+zTop)*v+14*Math.sin(PI*v)),F);
+        // The back cover swings open over the side button edge (a hinge line at x = -29, z = 3 after the flip),
+        // like a book page, so its inside faces up. Then it drops 6 mm onto the table.
+        // The antenna cable runs to that edge, as in MagicalTux's photo.
+        const book=v=>Mat.mul(Mat.translation(-29,0,3-6*v),Mat.mul(Mat.rotY(-PI*v),Mat.mul(Mat.translation(29,0,-3),F)));
         t.display=t.frame=F;
-        t.back=lay(s(1),62.7,0,-2.4);t.coil=lay(s(2),-50.5,-4,-2.24);t.battery=lay(s(3),-50.5,31,1);
-        t.bracket=lay(s(4),1.75,69.8,-1.95);t.pcb=lay(s(5),55.6,83,1.28);t.implant=t.pcb;
+        // The coil moved to the other side of the table: the open cover now lies where it was.
+        t.back=t.implantCover=book(s(1));t.coil=lay(s(2),55.5,-4,-2.24);t.battery=lay(s(3),-50.5,34,1);
+        t.bracket=lay(s(4),1.75,69.8,-1.95);
+        // The board keeps its stock orientation: back side up, just as it sits under the back cover.
+        // The implant board is on the screen side, so it ends up underneath. Spin the model to see it.
+        // zTop 2.3 is the top of the implant's metal can, so the implant does not sink into the table.
+        t.pcb=t.implant=lay(s(5),55.6,83,2.3);
         return t;
       }};
   }
