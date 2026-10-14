@@ -34,7 +34,9 @@ DEVICE_MODELS.stax={
 
     // ---------- Frame (part frame, stays): aluminium band, spine end caps, side button, chassis ----------
     k.inPart('frame',()=>{
-      k.slab('aluGray',BODY,[Outline.rect(49.4,82.6,[0,2.8,4.3,0],8,1.1,0)],-2.95,2.95,{top:.45,bottom:.45,seg:3});
+      // The cut-out must stay inside the face after the 0.45 mm edge rounding. On the spine side
+      // (x = -24) it starts at x = -23.2. A thinner wall broke the face fill into one huge stray triangle.
+      k.slab('aluGray',BODY,[Outline.rect(49,82.6,[0,2.8,4.3,0],8,1.3,0)],-2.95,2.95,{top:.45,bottom:.45,seg:3});
       const half=[];for(let i=0;i<=16;i++){const a=PI/2+i/16*PI;half.push([R*Math.cos(a),R*Math.sin(a)]);}
       for(const s of [1,-1])k.place({at:[XS,s*42.5,0],rx:s*PI/2},()=>k.slab('aluGray',half,[],0,1.2));
       k.roundBox('aluGray',[27.3,28,0],[.8,12,2.2],.35,2); // side button

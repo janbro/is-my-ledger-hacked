@@ -3,10 +3,19 @@
  *   ledger-genuine/flex/pcb-back.jpg  = the side that faces the screen (+Z). Processor and antennas.
  *   ledger-genuine/flex/pcb-front.jpg = the side that faces the back cover (-Z). Connectors, USB-C, [LEDGER] logo.
  * The outline was traced from the photo pixels. Scale: 0.051 mm per pixel (screen side photo),
- * checked against the 7 x 7 mm STM32WB35 chip. The USB-C socket sits at x = 0, the device's middle.
+ * checked against the 7 x 7 mm STM32WB35 chip.
+ * The numbers below are "board coordinates": the board upright, as in the photos, USB-C at the bottom.
+ * In the device the board lies sideways at the top (see FLEX_BOARD.at), and the USB-C port faces
+ * the left side. Ledger's newer photos (disassembled-2.jpg) and MagicalTux's teardown show it there.
  * Board faces: z = -1.25 (back side) and z = -0.45 (screen side). */
 const FLEX_BOARD={
   TOP:-.45,BOT:-1.25,
+  // Where the board sits in the device: turned 90 degrees clockwise (seen from the front), moved up.
+  // The four holes then land on the four screw posts of the mid-frame (frame-removed-back.jpg),
+  // and the USB-C opening ends just inside the left wall of the frame (x = -26.5).
+  at:{at:[12.5,20.5,0],rz:-Math.PI/2},
+  // Turns a board point [x, y] into device millimetres (same move as "at").
+  toDevice:([x,y])=>[y+12.5,20.5-x],
   // Outline, counter-clockwise, in device millimetres. It has notches on both long sides
   // and a slot at the bottom where the "mid-mount" USB-C socket passes through the board.
   outline:[[-6.94,-37.7],[-4.6,-37.7],[-4.6,-31.2],[4.6,-31.2],[4.6,-37.7],[17.7,-37.7],[18.1,-37.3],[18.1,-24.1],[15.25,-24.1],[15.25,-20],[17.9,-20],[17.9,-10.6],[15.66,-10.6],
