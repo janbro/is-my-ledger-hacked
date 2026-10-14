@@ -1137,10 +1137,12 @@ const QUIZ_PHOTOS=[
   tag:'Antenna wire on the back cover',
   reason:'A black antenna wire is taped to the inside of the back cover, with a lead into the device. Ledger\'s genuine Stax back cover has no wire. The board also carries the added module from the close-up photo. Careful: the rectangular orange NFC coil is fine. Ledger uses both a round and a rectangular coil.',
   credit:['Photo posted by Mark Karpelès (@MagicalTux) on X',KARPELES_PROFILE]},
- {kind:'photo',src:'compromised/fake-nano-x-wired-battery.png',compromised:true,device:'nano-x',x:.20,y:.48,
-  alt:'Two views of an opened device shaped like a Nano X. A green board, and a battery with red and black wires soldered to the board.',
-  tag:'Hand-soldered battery wires',
-  reason:'This is not a Ledger board. The battery is a generic 130 mAh cell, with red and black wires soldered straight onto the board. A genuine Nano X uses a 100 mAh battery that plugs in with a small flex ribbon. The green board\'s shape and chip layout also do not match Ledger\'s photo of the genuine green board.',
+ // The pointer marks the LTE module (the square module with a white 2D-code sticker, right-hand view).
+ // The red and black battery wires are NOT the giveaway, so the text says so plainly.
+ {kind:'photo',src:'compromised/fake-nano-x-wired-battery.png',compromised:true,device:'nano-x',x:.79,y:.47,
+  alt:'Two views of an opened device shaped like a Nano X. A square LTE module with a white 2D-code sticker sits on the board, with a thin black antenna wire running to the case.',
+  tag:'LTE module + antenna',
+  reason:'Look at the right-hand view. The square module with a white 2D-code sticker is an LTE (cellular) modem. A thin black antenna wire runs from the board to the case. A Ledger has no cellular radio and no antenna wire, so this device can send data out on its own. The red and black wires are only the battery leads. They are not the sign of a hack.',
   credit:['Photo posted by Mark Karpelès (@MagicalTux) on X',KARPELES_PROFILE]}
 ];
 // How many compromised rounds per game. The game adds the same number of genuine rounds.
