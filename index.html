@@ -1114,18 +1114,19 @@ const QUIZ_PHOTOS=[
  // We do not have the exact post links, so the credit links to his profile.
  {kind:'photo',src:'compromised/HUfsevTaMAAEd1l.jpg',compromised:true,device:'flex',x:.60,y:.43,
   alt:'An opened Ledger Flex. The back cover is lifted away, with a thin black wire running from inside the device to it.',
-  tag:'Antenna wire to the back cover',
-  reason:'Look at the back cover in the right hand. It has a printed part number, "AC-A2201-FLEX", with Chinese text meaning "Eurasia version". A thin black antenna wire runs from inside the device to a small connector on it. Ledger\'s genuine Flex back cover is plain inside, with no wire. An extra antenna means an extra radio was added.',
+  tag:'Antenna in the back cover',
+  reason:'Look at the back cover in the right hand. It has a printed part number, "AC-A2201-FLEX", with Chinese text meaning "Eurasia version". A thin black wire runs from inside the device to a small connector on it. The wire is a warning sign. The proof is what it connects to: an antenna built into the cover. Ledger\'s genuine Flex back cover is plain inside. An extra antenna means an extra radio was added.',
   credit:['Photo posted by Mark Karpelès (@MagicalTux) on X',KARPELES_PROFILE]},
  {kind:'photo',src:'compromised/HUMqvANa4AA2uaA.jpg',compromised:true,device:'nano-x',x:.38,y:.72,
   alt:'A pink Ledger Nano X taken apart: steel guard, clear front cover, and the board with its screen inside the pink case.',
-  tag:'Extra black wire',
-  reason:'A thin black wire loops over the top edge of the board, beside the screen. A genuine Nano X has no loose wires at all. Its screen, battery and buttons connect with flat ribbons and small connectors. A wire like this is usually an added antenna, or a tap on the board.',
+  // Wires alone are a strong warning sign, not proof. The text tells the player to trace where they connect.
+  tag:'Extra black wire: trace it',
+  reason:'A thin black wire loops over the top edge of the board, beside the screen. A genuine Nano X has no loose wires. Its screen, battery and buttons connect with flat ribbons and small connectors. A wire alone does not prove a hack, but it is a strong warning sign. Trace where it connects. If it leads to an added module, or ends loose as an antenna, that is the proof. Check under the screen too: that is where the newest implants hide their LTE modem.',
   credit:['Photo posted by Mark Karpelès (@MagicalTux) on X',KARPELES_PROFILE]},
  {kind:'photo',src:'compromised/HUWX_TNaQAAscNb.jpg',compromised:true,device:'nano-x',x:.51,y:.57,
   alt:'The back of a black Ledger Nano X board in a yellow case, covered with thin copper wires and a white glue blob.',
-  tag:'Hand-soldered copper wires',
-  reason:'Fine copper wires are hand-soldered across the back of the board. A white glue blob holds them in place. A genuine Nano X board back has only clean gold test pads. Wires soldered onto those pads are how implants tap the board.',
+  tag:'Hand-soldered wires: trace them',
+  reason:'Fine copper wires are hand-soldered onto the test pads on the back of the board. A white glue blob holds them in place. A genuine Nano X board back has only clean gold test pads. The wires alone do not prove a hack, but they are a strong warning sign. What matters is where they lead. Here they wrap around the board edge. If they end at an extra chip, a modem or an antenna, that is the proof of an implant.',
   credit:['Photo posted by Mark Karpelès (@MagicalTux) on X',KARPELES_PROFILE]},
  {kind:'photo',src:'compromised/HUXhOdPaEAAu7N1.jpg',compromised:true,device:'stax',x:.83,y:.60,
   alt:'A black Ledger Stax circuit board, Rev. 5.4. A second board with a chip and a large silver metal can covers its right half.',
@@ -1134,8 +1135,8 @@ const QUIZ_PHOTOS=[
   credit:['Photo posted by Mark Karpelès (@MagicalTux) on X',KARPELES_PROFILE]},
  {kind:'photo',src:'compromised/HUXhOdYbwAAXSAB.jpg',compromised:true,device:'stax',x:.77,y:.48,
   alt:'A Ledger Stax fully taken apart on a wooden floor: frame, board, orange NFC coil, back cover with a black wire, and battery.',
-  tag:'Antenna wire on the back cover',
-  reason:'A black antenna wire is taped to the inside of the back cover, with a lead into the device. Ledger\'s genuine Stax back cover has no wire. The board also carries the added module from the close-up photo. Careful: the rectangular orange NFC coil is fine. Ledger uses both a round and a rectangular coil.',
+  tag:'Antenna on the back cover',
+  reason:'A black wire is taped to the inside of the back cover, with a lead into the device. Ledger\'s genuine Stax back cover has no wire. The wire is a warning sign. The proof is what it is part of: an added antenna, plus the added modem module on the board from the close-up photo. Careful: the rectangular orange NFC coil is fine. Ledger uses both a round and a rectangular coil.',
   credit:['Photo posted by Mark Karpelès (@MagicalTux) on X',KARPELES_PROFILE]},
  // The pointer marks the LTE module (the square module with a white 2D-code sticker, right-hand view).
  // The red and black battery wires are NOT the giveaway, so the text says so plainly.
@@ -1253,7 +1254,7 @@ function finishQuiz(){
   $('#quiz-progress').textContent='FINISHED';$('#quiz-pointer').hidden=true;$('#quiz-answers').hidden=true;$('#quiz-reference').hidden=true;
   $('#quiz-question').textContent=`You got ${quizScore} of ${quizRounds.length} right.`;
   $('#quiz-verdict').textContent='Tells to remember';
-  $('#quiz-reason').textContent='A second board or flex circuit. Any radio: a metal modem can, an antenna wire, a SIM chip. Chips with scraped-off markings. Loose wires or extra solder blobs. A battery smaller than it should be. A missing foam pad under the screen. The newest implants hide well, so a clean look is not proof.';
+  $('#quiz-reason').textContent='A second board or flex circuit. Any radio: a metal modem can, an antenna wire, a SIM chip. Chips with scraped-off markings. Loose wires or extra solder blobs are a strong warning sign, so trace where they connect. A battery smaller than it should be. A missing foam pad under the screen. The newest implants hide well, so a clean look is not proof.';
   $('#quiz-credit').innerHTML=`Implant photos: <a href="${KARPELES_IMPLANT_POST}" target="_blank" rel="noopener noreferrer">Mark Karpelès (@MagicalTux) ↗</a>. Genuine photos: <a href="${LEDGER_INTEGRITY_ARTICLE}" target="_blank" rel="noopener noreferrer">Ledger, "Check hardware integrity" ↗</a>`;
   const feedback=$('#quiz-feedback');feedback.classList.remove('right','wrong');feedback.hidden=false;
   $('#quiz-next').textContent='Play again ↻';
