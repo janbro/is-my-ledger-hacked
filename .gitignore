@@ -1,0 +1,13 @@
+# Files kept on this computer but not published to GitHub Pages.
+
+# Old backup copy of the workbench page. The live copy is ledger-nano-s-pcb-corrected.html.
+ledger-nano-s-pcb-corrected.backup.html
+
+# Loose photos from early research. The page uses the copies in ledger-genuine/ and compromised/.
+/asset_4404382029329B_stax_legitimate_hardware.jpeg
+/HUhsrftWcAAzxN5.jpg
+/stax_dissassembled_legitimate_hardware.jpg
+/stax_dissassembled_2_legitimate_hardware.jpg
+
+# Scratch pages made while measuring photos.
+tmp-*.html
