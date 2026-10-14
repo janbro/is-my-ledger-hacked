@@ -116,7 +116,7 @@ DEVICE_MODELS.stax={
     return {name:this.name,...k.build(),atlas:A.canvas,screen:{canvas:screen,px:[512,695],kind:'eink'},
       partIds:makePartIds(parts),pcbParts:['pcb'],center:[4,25,0],startProgress:0,implantProgress:6,
       // Steps: 1 the device turns over (back up), 2 the back cover opens like a book, 3 the charging coil,
-      // 4 the battery, 5 the bracket, 6 the circuit board lifts out (it stays back side up). Parts are laid out on the table.
+      // 4 the battery, 5 the bracket, 6 the circuit board lifts out and turns over end to end. Parts are laid out on the table.
       rig(p){
         const t={},s=i=>rigStep(p,i),f=s(0);
         const F=Mat.mul(Mat.translation(0,0,8*Math.sin(PI*f)),Mat.rotY(PI*f));
@@ -130,10 +130,11 @@ DEVICE_MODELS.stax={
         // The coil moved to the other side of the table: the open cover now lies where it was.
         t.back=t.implantCover=book(s(1));t.coil=lay(s(2),55.5,-4,-2.24);t.battery=lay(s(3),-50.5,34,1);
         t.bracket=lay(s(4),1.75,69.8,-1.95);
-        // The board keeps its stock orientation: back side up, just as it sits under the back cover.
-        // The implant board is on the screen side, so it ends up underneath. Spin the model to see it.
-        // zTop 2.3 is the top of the implant's metal can, so the implant does not sink into the table.
-        t.pcb=t.implant=lay(s(5),55.6,83,2.3);
+        // The board turns over end to end, about its width line (y = -16.6, z = -0.36), so its screen side
+        // ends up on top. This keeps its left and right sides where they are in the device.
+        // (Turning it side to side, about its length line, left it looking upside down.)
+        const turn=v=>Mat.mul(Mat.translation(0,-16.6,-.36),Mat.mul(Mat.rotX(PI*v),Mat.translation(0,16.6,.36)));
+        const v=s(5);t.pcb=t.implant=Mat.mul(Mat.translation(55.6*v,83*v,-1.2*v+24*Math.sin(PI*v)),Mat.mul(F,turn(v)));
         return t;
       }};
   }
